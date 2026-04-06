@@ -454,7 +454,7 @@ c.bs.forEach((b,i)=>{h+=`<div style="background:#f8f8fa;border-radius:10px;paddi
 h+=`</div>`;
 // FOOTER/CONTACT
 h+=`<div class="sec-ed"><label class="fl" style="color:var(--blue)">📋 PIE DE PÁGINA / CONTACTO</label><div class="fg"><label class="fl">Texto footer</label><textarea class="fi" id="sc-ft" style="min-height:36px;resize:vertical">${c.ft}</textarea></div><div class="fg"><label class="fl">Dirección</label><textarea class="fi" id="sc-addr" style="min-height:36px;resize:vertical">${c.addr||''}</textarea></div><div class="fr"><div class="fg"><label class="fl">Teléfono</label><input class="fi" id="sc-phone" value="${c.phone||''}"></div><div class="fg"><label class="fl">Instagram URL</label><input class="fi" id="sc-ig" value="${c.ig||''}"></div></div><div class="fr"><div class="fg"><label class="fl">Instagram @</label><input class="fi" id="sc-igh" value="${c.igHandle||''}"></div><div class="fg"><label class="fl">TikTok @</label><input class="fi" id="sc-tth" value="${c.ttHandle||''}"></div></div><div class="fg"><label class="fl">TikTok URL</label><input class="fi" id="sc-tt" value="${c.tt||''}"></div><div class="fg"><label class="fl">Datos bancarios</label><textarea class="fi" id="sc-bank" style="min-height:60px;resize:vertical">${c.bank||''}</textarea></div></div>`;
-h+=`<div class="br"><button class="bf2 bl" style="flex:1" onclick="saveSiteEd()">Guardar Todo</button><button class="bf2 gr" style="flex:1" onclick="closeModal()">Cancelar</button></div></div></div>`;
+h+=`<div class="br"><button class="bf2 bl" style="flex:1" onclick="saveSiteEd()">Guardar Todo</button><button class="bf2 gr" style="flex:1" onclick="closeModal()">Cancelar</button></div><div style="margin-top:10px"><button id="gh-publish-btn" class="bf2 bl" style="width:100%;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;font-size:13px;padding:10px" onclick="saveSiteEd();setTimeout(publishToGitHub,800)">🚀 Guardar y Publicar para todos</button><p style="font-size:10px;color:#888;text-align:center;margin-top:4px">Todos verán los cambios en ~1 minuto</p></div></div></div>`;
 document.getElementById('modals').innerHTML=h;
 }
 function addHighlight(){
@@ -497,7 +497,31 @@ const hl=document.getElementById('sc-hl').value;if(hl&&hl.startsWith('data:'))S.
 const fl=document.getElementById('sc-fl').value;if(fl&&fl.startsWith('data:'))S.sc.footerLogo=fl;
 // Cat images
 const ci={};document.querySelectorAll('.sc-ci').forEach(el=>{const cat=el.dataset.cat;if(el.value)ci[cat]=el.value;});S.sc.catImgs=ci;
-saveSC();closeModal();toast('✓ Sitio actualizado');render();
+saveSC();closeModal();toast('✓ Sitio actualizado');render();}
+
+// ===== PUBLICAR VIA WORKER =====
+async function publishToGitHub(){
+  const btn=document.getElementById('gh-publish-btn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Publicando...';}
+  try{
+    const html=document.documentElement.outerHTML;
+    const b64=btoa(unescape(encodeURIComponent(html)));
+    const r=await fetch('https://araguacolor-publisher.josecamejo86-d82.workers.dev/',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({content:b64})
+    });
+    const d=await r.json();
+    if(d.success){
+      toast('✅ Publicado. En ~1 min todos verán los cambios.');
+    }else{
+      toast('❌ Error: '+(d.error||'No se pudo publicar'));
+    }
+  }catch(e){
+    toast('❌ Error de conexión: '+e.message);
+  }
+  if(btn){btn.disabled=false;btn.textContent='🚀 Publicar para todos';}
+}
 }
 
 // ===== MAIN RENDER =====
